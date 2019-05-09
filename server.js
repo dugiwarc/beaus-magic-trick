@@ -15,6 +15,9 @@ const express = require("express"),
   PORT = process.env.PORT || 5000,
   DB_NAME = process.env.DB_NAME;
 
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
 app.get("/secret", (req, res) =>
   res.sendFile(path.join(__dirname, "secret.html"))
 );
@@ -22,7 +25,7 @@ app.get("/secret", (req, res) =>
 app.post("/secret", (req, res) => {
   MongoClient.connect(URI, { useNewUrlParser: true }, (err, client) => {
     if (err) {
-      console.log(err);
+      console.error(err);
     } else {
       const db = client.db(DB_NAME);
       const collection = db.collection("names");
@@ -32,7 +35,7 @@ app.post("/secret", (req, res) => {
       };
       collection.insertOne(entry, (err, result) => {
         if (err) {
-          console.log(err);
+          console.error(err);
         } else {
           res.send("Inserted into database");
         }
@@ -47,7 +50,7 @@ app.get("/:param*", (req, res) => {
 
   MongoClient.connect(URI, { useNewUrlParser: true }, (err, client) => {
     if (err) {
-      console.log(err);
+      console.error(err);
     } else {
       const db = client.db(DB_NAME);
       const collection = db.collection("names");
@@ -58,14 +61,13 @@ app.get("/:param*", (req, res) => {
       } else {
         collection.find({ name: name }).toArray((err, result) => {
           if (err) {
-            console.log(err);
+            console.error(err);
           } else if (result.length) {
             const card = result[result.length - 1].card + ".png";
             res.sendFile(path.join(__dirname + "/cards/" + card));
           } else {
             res.sendStatus(404);
           }
-
           client.close();
         });
       }
